@@ -20,15 +20,6 @@ namespace TelemetryECU
 
             while (running)
             {
-
-                /*
-                Console.WriteLine("Informações do carro:");
-                Console.WriteLine("RPM: " + rpm);
-                Console.WriteLine("Temperatura: " + temp);
-                Console.WriteLine("Velocidade: " + speed);
-                Console.WriteLine("Tanque combustível: " + fuel + "L");
-                */
-
                 var key = await Task.Run(() => Console.ReadKey(true).Key);
 
                 switch (key)

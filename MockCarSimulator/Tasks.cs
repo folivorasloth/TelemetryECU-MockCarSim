@@ -78,12 +78,6 @@ namespace MockCarSimulator
             Speed += (Marcha * 5);
             Fuel -= 0.1;
 
-            if(Speed >= 180 && Speed < 181)
-            {
-                Console.WriteLine("VELOCIDADE MÁXIMA!!!");
-                Speed = 180;
-            }
-
             if(Rpm >= 6000)
             {
                 if(Marcha < 5)
