@@ -13,6 +13,8 @@ namespace MockCarSimulator
         public double Fuel { get; set; }
         public int Speed { get; set; }
         public int Marcha { get; set; }
+        public int maxSpeed { get; set; }
+        public int maxRpm = 6500;
 
         public TasksCarro(int rpm, double temp, double fuel, int speed)
         {
@@ -21,7 +23,6 @@ namespace MockCarSimulator
             Fuel = fuel;
             Speed = speed;
         }
-
         public async Task LigarCarro()
         {
             Console.WriteLine("\nLigando carro");
@@ -37,7 +38,7 @@ namespace MockCarSimulator
             if (Marcha < 5)
             {
                 Marcha++;
-                Console.WriteLine($"Subindo marcha para: {Marcha}");
+                Console.WriteLine($"\nSubindo marcha para: {Marcha}");
 
                 if(Marcha > 1)
                 {
@@ -46,7 +47,7 @@ namespace MockCarSimulator
             }
             else
             {
-                Console.WriteLine("Marcha máxima atingida.");
+                Console.WriteLine("\nMarcha máxima atingida.");
             }
         }
 
@@ -58,7 +59,7 @@ namespace MockCarSimulator
             {
                 Rpm = 0;
                 Speed = 0;
-                Console.WriteLine("Você tentou amdar com o carro em uma marcha alta, o motor apagou!");
+                Console.WriteLine("\nVocê tentou amdar com o carro em uma marcha alta, o motor apagou!");
                 return;
             }
 
@@ -66,11 +67,11 @@ namespace MockCarSimulator
             if (Marcha == 0)
             {
                 Rpm = Math.Min(Rpm + 800, 7000);
-                Console.WriteLine("NEUTRO!!");
+                Console.WriteLine("\nNEUTRO!!");
                 return;
             }
 
-            Console.WriteLine("Acelerando!");
+            Console.WriteLine("\nAcelerando!");
 
             // Funcionamento
 
@@ -78,15 +79,38 @@ namespace MockCarSimulator
             Speed += (Marcha * 5);
             Fuel -= 0.1;
 
-            if(Rpm >= 6000)
+            
+
+            switch(Marcha)
+            {
+                case 1:
+                    maxSpeed = 50;
+                    break;
+                case 2:
+                    maxSpeed = 80;
+                    break;
+                case 3:
+                    maxSpeed = 120;
+                    break;
+                case 4:
+                    maxSpeed = 150;
+                    break;
+                case 5:
+                    maxSpeed = 180;
+                    break;
+            }
+
+            if(Rpm == maxRpm || Speed == maxSpeed)
             {
                 if(Marcha < 5)
                 {
                     Console.WriteLine("RPM Alto. TROQUE DE MARCHA!");
+                    Rpm = maxRpm;
+                    Speed = maxSpeed;
                 }
                 else
                 {
-                    Rpm = 6500;
+                    Rpm = maxRpm;
                     Console.WriteLine("RPM no limite! Não é possível subir mais a marcha.");
                 }
             }

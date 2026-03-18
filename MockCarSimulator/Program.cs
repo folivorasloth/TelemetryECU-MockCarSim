@@ -11,10 +11,9 @@ namespace TelemetryECU
 
             TasksCarro carro = new TasksCarro(0, 30, 50, 0);
 
-            Console.WriteLine("----------------------------------------------");
-            Console.WriteLine("TelemetryECU | Mock Car Simulator");
-            Console.WriteLine("----------------------------------------------");
-            Console.WriteLine("Comandos:\nL - Ligar carro\nS - Subir Marcha\nD - Descer Marcha\nA - Acelerar\nF - Frear\nQ - Sair do simulador.");
+            Console.WriteLine("|-----------------------------------------------|");
+            Console.WriteLine("|     PRESSIONE QUALQUER TECLA PARA INICIAR     |");
+            Console.WriteLine("|_______________________________________________|");
 
             bool running = true;
 
@@ -22,32 +21,28 @@ namespace TelemetryECU
             {
                 var key = await Task.Run(() => Console.ReadKey(true).Key);
 
+                TextoTopo();
+                
+
                 switch (key)
                 {
                     case ConsoleKey.L:
                         await carro.LigarCarro();
                         Console.WriteLine(carro);
+                        TextoTopo();
+                        Console.WriteLine(carro);
                         break;
                     case ConsoleKey.S:
+                        TextoTopo();
                         await carro.SubirMarcha();
                         break;
                     case ConsoleKey.D:
                          /*await carro.DescerMarcha();
                         break; */
                     case ConsoleKey.A:
+                        TextoTopo();
                         await carro.AcelerarCarro();
-
-                        // Limpa a tela para que a telemetria apareça sempre no topo
-                        Console.Clear();
-
-                        Console.WriteLine("----------------------------------------------");
-                        Console.WriteLine("TelemetryECU | Mock Car Simulator");
-                        Console.WriteLine("----------------------------------------------");
-
-                        // Chama o seu override ToString()
                         Console.WriteLine(carro);
-
-                        Console.WriteLine("\n[Segure A para acelerar | F para frear | S para sair]");
                         break;
                     case ConsoleKey.F:
                         await carro.FrearCarro();
@@ -58,6 +53,15 @@ namespace TelemetryECU
                         break;  
                 }
             }
+        }
+        static void TextoTopo()
+        {
+            Console.Clear();
+
+            Console.WriteLine("----------------------------------------------");
+            Console.WriteLine("TelemetryECU | Mock Car Simulator");
+            Console.WriteLine("----------------------------------------------");
+            Console.WriteLine("\nL - Ligar carro\nA - Acelerar\nS - Subir Marcha\nD - Descer Marcha\nF - Frear\nQ - sair");
         }
     }
 }
