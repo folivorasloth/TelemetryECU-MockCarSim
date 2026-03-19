@@ -2,6 +2,8 @@
 
 This is the phase 1 of my TelemetryECU project: Core engine for real-time automotive data simulation and telemetry.
 
+![menu](https://github.com/user-attachments/assets/7229f108-878d-437f-a425-6695586dd46f)
+
 ## Contents
 
 - [Project Overview](#projectoverview)
