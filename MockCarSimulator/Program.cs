@@ -4,14 +4,14 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TelemetryECU
+namespace MockCarSimulator
 {
     class Program
     {
         static async Task Main(string[] args)
         {
-
             TasksCarro carro = new TasksCarro(0, 30, 50, 0);
+            TelemetryRender tela = new TelemetryRender();
 
             string asciiArt = @"
   __  __            _        _____              _____ _                 _       _             
@@ -26,7 +26,6 @@ namespace TelemetryECU
             Console.WriteLine(asciiArt);
             Console.ResetColor();
 
-            int boxStartLine = Console.CursorTop;
             int x = Console.CursorLeft;
             int y = Console.CursorTop;
 
@@ -36,91 +35,136 @@ namespace TelemetryECU
 
             while (!Console.KeyAvailable)
             {
-                // Posiciona o cursor sempre no início do bloco da mensagem
                 Console.SetCursorPosition(x, y);
 
                 if (timer.ElapsedMilliseconds > 5000)
                 {
-                    // MODO ALERTA (PISCANTE)
                     Console.ForegroundColor = isRed ? ConsoleColor.Red : ConsoleColor.DarkGray;
-
-                    Console.WriteLine(" ╔════════════════════════════════════════════════╗");
-                    Console.WriteLine(" ║                                                ║");
-                    Console.WriteLine(" ║           [ PRESS ANY KEY TO ENTER ]           ║");
-                    Console.WriteLine(" ║                                                ║");
-                    Console.WriteLine(" ╚════════════════════════════════════════════════╝");
-
                     isRed = !isRed;
-                    Thread.Sleep(500); // Velocidade do pisca
+                    Thread.Sleep(500);
                 }
                 else
                 {
-                    // MODO PADRÃO (ESTÁTICO)
                     Console.ForegroundColor = ConsoleColor.Cyan;
-                    Console.WriteLine(" ╔════════════════════════════════════════════════╗");
-                    Console.WriteLine(" ║                                                ║");
-                    Console.WriteLine(" ║           [ PRESS ANY KEY TO ENTER ]           ║");
-                    Console.WriteLine(" ║                                                ║");
-                    Console.WriteLine(" ╚════════════════════════════════════════════════╝");
-
-                    // Um delay menor aqui para não consumir 100% da CPU
                     Thread.Sleep(100);
                 }
+
+                Console.WriteLine(" ╔════════════════════════════════════════════════╗");
+                Console.WriteLine(" ║                                                ║");
+                Console.WriteLine(" ║           [ PRESS ANY KEY TO ENTER ]           ║");
+                Console.WriteLine(" ║                                                ║");
+                Console.WriteLine(" ╚════════════════════════════════════════════════╝");
             }
 
             Console.ReadKey(true);
             Console.ResetColor();
-            Console.SetCursorPosition(0, boxStartLine + 5); // Pula o box para continuar
-            TextoTopo();
+            Console.Clear();
 
-            // AQUI INICIA O PROGRAMA
+            TextoTopo();
+            tela.Initialize();
+
             bool running = true;
+            int coolDown = 0;
+            bool freando = false;
 
             while (running)
             {
-                var key = await Task.Run(() => Console.ReadKey(true).Key);
-
-                TextoTopo();
-                
-
-                switch (key)
+                // 1. INPUT
+                while (Console.KeyAvailable)
                 {
-                    case ConsoleKey.L:
-                        await carro.LigarCarro();
-                        Console.WriteLine(carro);
-                        TextoTopo();
-                        Console.WriteLine(carro);
-                        break;
-                    case ConsoleKey.S:
-                        TextoTopo();
-                        await carro.SubirMarcha();
-                        break;
-                    case ConsoleKey.D:
-                         /*await carro.DescerMarcha();
-                        break; */
-                    case ConsoleKey.A:
-                        TextoTopo();
-                        await carro.AcelerarCarro();
-                        Console.WriteLine(carro);
-                        break;
-                    case ConsoleKey.F:
-                        await carro.FrearCarro();
-                        break;
-                    case ConsoleKey.Q:
-                        running = false;
-                        Console.WriteLine("Saindo do simulador...");
-                        break;  
+                    var key = Console.ReadKey(true).Key;
+                    switch (key)
+                    {
+                        case ConsoleKey.L:
+                            _ = carro.LigarCarro();   // Fire-and-forget OK aqui
+                            break;
+                        case ConsoleKey.S:
+                            carro.SubirMarcha();
+                            break;
+                        case ConsoleKey.D:
+                            carro.DescerMarcha();
+                            break;
+                        case ConsoleKey.A:
+                            freando = false;
+                            carro.AcelerarCarro();
+                            coolDown = 6;
+                            break;
+                        case ConsoleKey.F:
+                            freando = true;            // Ativa modo frenagem
+                            break;
+                        case ConsoleKey.Q:
+                            running = false;
+                            break;
+                    }
                 }
+
+                // 2. FÍSICA
+                if (freando)
+                {
+                    carro.FrearCarro(); // Um tick de frenagem por frame
+
+                    if (carro.Speed == 0) freando = false; // Para quando parar
+                }
+                else if (coolDown > 0)
+                {
+                    coolDown--;
+                }
+                else if (carro.carState == 1)
+                {
+                    carro.DesacelerarMotor();
+                    carro.AtualizarTemperatura();
+                }
+
+                // 3. RENDER
+                string gearDisplay = carro.Marcha == 0 ? "N" : carro.Marcha.ToString();
+
+                string stateDisplay = "OFFLINE";
+                if (carro.carState == 1) stateDisplay = "ONLINE";
+                else if (carro.carState == 2) stateDisplay = "STARTING";
+
+                tela.UpdateDashboard(
+                    gearDisplay,
+                    (int)carro.Speed,
+                    carro.Fuel,
+                    (int)carro.Rpm,
+                    carro.maxRpm,
+                    (int)carro.Temp,
+                    stateDisplay,
+                    carro.StatusMessage      // <- Mensagem sem Console.WriteLine
+                );
+
+                await Task.Delay(50); // ~20 FPS
             }
         }
+
         static void TextoTopo()
         {
             Console.Clear();
 
-            Console.WriteLine("----------------------------------------------");
-            Console.WriteLine("TelemetryECU | Mock Car Simulator");
-            Console.WriteLine("----------------------------------------------");
-            Console.WriteLine("\nL - Ligar carro\nA - Acelerar\nS - Subir Marcha\nD - Descer Marcha\nF - Frear\nQ - sair");
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(" ╔══════════════════════════════════════════════════════════╗ ");
+            Console.WriteLine(" ║  TELEMETRY ECU | MOCK CAR SIMULATOR | v0.0.1 - STABLE    ║ ");
+            Console.WriteLine(" ╚══════════════════════════════════════════════════════════╝ ");
+            Console.ResetColor();
+
+            Console.WriteLine();
+
+            Console.BackgroundColor = ConsoleColor.DarkRed;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write("  COMANDOS DE OPERAÇÃO:                                     \n");
+            Console.ResetColor();
+            Console.WriteLine();
+
+            Console.ForegroundColor = ConsoleColor.Cyan; Console.Write(" [L]"); Console.ResetColor(); Console.Write(" Ligar Carro      ");
+            Console.ForegroundColor = ConsoleColor.Cyan; Console.Write(" [S]"); Console.ResetColor(); Console.WriteLine(" Subir Marcha");
+
+            Console.ForegroundColor = ConsoleColor.Cyan; Console.Write(" [A]"); Console.ResetColor(); Console.Write(" Acelerar         ");
+            Console.ForegroundColor = ConsoleColor.Cyan; Console.Write(" [D]"); Console.ResetColor(); Console.WriteLine(" Descer Marcha");
+
+            Console.ForegroundColor = ConsoleColor.Cyan; Console.Write(" [F]"); Console.ResetColor(); Console.Write(" Frear (segure)   ");
+            Console.ForegroundColor = ConsoleColor.Cyan; Console.Write(" [Q]"); Console.ResetColor(); Console.WriteLine(" Sair");
+
+            Console.WriteLine(" ──────────────────────────────────────────────────────────");
         }
     }
 }

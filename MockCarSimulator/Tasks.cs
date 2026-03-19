@@ -1,20 +1,25 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace MockCarSimulator
 {
     public class TasksCarro
     {
-        public int Rpm { get; set; }
+        public double Rpm { get; set; }
         public double Temp { get; set; }
         public double Fuel { get; set; }
-        public int Speed { get; set; }
+        public double Speed { get; set; }
         public int Marcha { get; set; }
-        public int maxSpeed { get; set; }
         public int maxRpm = 6500;
+
+        // Velocidade máxima por marcha (índice 0 = neutro)
+        private static readonly int[] maxSpeedPerGear = { 0, 40, 80, 120, 160, 200 };
+
+        // Estado: 0 = OFFLINE | 1 = ONLINE | 2 = STARTING
+        public int carState;
+
+        // Mensagem de status que o Program.cs exibe no lugar de Console.WriteLine
+        public string StatusMessage { get; private set; } = "";
 
         public TasksCarro(int rpm, double temp, double fuel, int speed)
         {
@@ -23,141 +28,142 @@ namespace MockCarSimulator
             Fuel = fuel;
             Speed = speed;
         }
+
+        // ── LIGAR ────────────────────────────────────────────────────────────────
         public async Task LigarCarro()
         {
-            Console.WriteLine("\nLigando carro");
-            await Task.Delay(5000);
+            if (carState != 0) return; // Ignora se já ligado/ligando
+
+            carState = 2; // STARTING
+            StatusMessage = "Ligando carro...";
+            await Task.Delay(3000);
+
             Rpm = 900;
             Temp = 70;
-            Fuel -= 0.5;
-            Console.WriteLine("\nCarro ligado!");
+            Fuel = Math.Max(0, Fuel - 1.0);
+            carState = 1; // ONLINE
+            StatusMessage = "Carro ligado!";
         }
 
-        public async Task SubirMarcha()
+        // ── SUBIR MARCHA ─────────────────────────────────────────────────────────
+        public void SubirMarcha()
         {
+            if (carState != 1) return;
+
             if (Marcha < 5)
             {
                 Marcha++;
-                Console.WriteLine($"\nSubindo marcha para: {Marcha}");
-
-                if(Marcha > 1)
-                {
-                    Rpm -= 3000;
-                }
+                if (Marcha > 1)
+                    Rpm = Math.Max(900, Rpm - 2500); // Queda de RPM na troca
+                StatusMessage = $"Marcha {Marcha}";
             }
             else
             {
-                Console.WriteLine("\nMarcha máxima atingida.");
+                StatusMessage = "Marcha máxima!";
             }
         }
 
-        public async Task AcelerarCarro()
+        // ── DESCER MARCHA ─────────────────────────────────────────────────────────
+        public void DescerMarcha()
         {
+            if (carState != 1) return;
 
-            //Verifica se o usuário tentou sair com o carro parado em uma marcha alta, o que faria o motor apagar.
-            if (Speed < 10 && Marcha > 3)
-            {
-                Rpm = 0;
-                Speed = 0;
-                Console.WriteLine("\nVocê tentou amdar com o carro em uma marcha alta, o motor apagou!");
-                return;
-            }
+                Marcha--;
+                if (Marcha > 1)
+                    Rpm = Math.Max(900, Rpm + 2500); // Queda de RPM na troca
+                StatusMessage = $"Marcha {Marcha}";
 
-            //Aviso de Neutro
-            if (Marcha == 0)
-            {
-                Rpm = Math.Min(Rpm + 800, 7000);
-                Console.WriteLine("\nNEUTRO!!");
-                return;
-            }
-
-            Console.WriteLine("\nAcelerando!");
-
-            // Funcionamento
-
-            Rpm += (600 / Marcha);
-            Speed += (Marcha * 5);
-            Fuel -= 0.1;
-
-            
-
-            switch(Marcha)
-            {
-                case 1:
-                    maxSpeed = 50;
-                    break;
-                case 2:
-                    maxSpeed = 80;
-                    break;
-                case 3:
-                    maxSpeed = 120;
-                    break;
-                case 4:
-                    maxSpeed = 150;
-                    break;
-                case 5:
-                    maxSpeed = 180;
-                    break;
-            }
-
-            if(Rpm == maxRpm || Speed == maxSpeed)
-            {
-                if(Marcha < 5)
-                {
-                    Console.WriteLine("RPM Alto. TROQUE DE MARCHA!");
-                    Rpm = maxRpm;
-                    Speed = maxSpeed;
-                }
-                else
-                {
-                    Rpm = maxRpm;
-                    Console.WriteLine("RPM no limite! Não é possível subir mais a marcha.");
-                }
-            }
-            Console.WriteLine($"Status: {Marcha}ª Marcha | Velocidade: {Speed} km/h | RPM: {Rpm}");
         }
 
-        public async Task FrearCarro()
+        // ── ACELERAR ─────────────────────────────────────────────────────────────
+        public void AcelerarCarro()
         {
-            bool parado = false;
-            while(! parado)
+            if (carState != 1 || Marcha == 0) return;
+
+            // Sobe RPM
+            Rpm = Math.Min(maxRpm, Rpm + 350);
+
+            // Velocidade limitada pelo teto da marcha atual
+            int topSpeed = maxSpeedPerGear[Marcha];
+            if (Speed < topSpeed)
             {
-                Console.WriteLine("Freando!");
-                if (Speed == 0)
-                {
-                    Console.WriteLine("\nCarro já está parado.");
-                    parado = true;
-                }
-                else
-                {
-                    while (Speed >= 0)
-                    {
-                        Speed -= 2;
-                        Rpm -= 100;
-                        Console.WriteLine($"Velocidade: {Speed} km/h");
-                        await Task.Delay(50);
-                    }
-                }
+                Speed += 1.5;
+                if (Speed > topSpeed) Speed = topSpeed;
+            }
+
+            Fuel = Math.Max(0, Fuel - 0.05);
+            StatusMessage = "";
+        }
+
+        // ── DESACELERAR (chamado pelo loop quando nenhuma tecla é pressionada) ───
+        public void DesacelerarMotor()
+        {
+            if (carState != 1) return;
+
+            // RPM cai naturalmente até o marcha-lenta
+            double rpmMinimo = 900;
+            if (Rpm > rpmMinimo)
+                Rpm = Math.Max(rpmMinimo, Rpm - 150);
+
+            // Velocidade também cai com a resistência (sem embreagem)
+            if (Speed > 0)
+            {
+                Speed = Math.Max(0, Speed - 0.8);
+                // Se for devagar demais para a marcha, não empurra o RPM alto
             }
         }
 
-        public override string ToString()
+        // ── FREAR ────────────────────────────────────────────────────────────────
+        // Faz um tick de frenagem a cada chamada (sem loop interno, sem await perdido)
+        public void FrearCarro()
         {
-            // Lógica simples de alerta
-            string statusTemp = Temp > 100 ? "!!! SUPERAQUECIMENTO !!!" : "Normal";
-            string statusFuel = Fuel < 5 ? "!!! RESERVA !!!" : "OK";
+            if (carState != 1) return;
 
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("\n>>>> PAINEL DE CONTROLE <<<<");
-            sb.AppendLine($"MARCHA: {Marcha}");
-            sb.AppendLine($"VELOCIDADE: {Speed} km/h");
-            sb.AppendLine($"RPM: {Rpm} rpm");
-            sb.AppendLine($"TEMP: {Temp:F1}°C ({statusTemp})");
-            sb.AppendLine($"COMBUSTÍVEL: {Fuel:F2}L ({statusFuel})");
-            sb.AppendLine("----------------------------");
-
-            return sb.ToString();
+            if (Speed > 0)
+            {
+                Speed = Math.Max(0, Speed - 3.0);
+                Rpm = Math.Max(900, Rpm - 200);
+            }
+            else
+            {
+                StatusMessage = "Carro parado.";
+            }
         }
+        public void AtualizarTemperatura()
+        {
+            if (carState != 1) return;
 
+            double rpmRatio = Rpm / maxRpm;
+
+            // ── AQUECIMENTO ──────────────────────────────────────────────
+            double calor = 0;
+
+            // RPM alto sempre gera calor
+            if (rpmRatio > 0.7)
+                calor += (rpmRatio - 0.7) * 0.8; // Escala suave
+
+            // Neutro esticado — sem carga dissipa mal o calor
+            if (Marcha == 0 && Rpm > 2000)
+                calor += 0.3;
+
+            // Marcha baixa com velocidade alta — motor forçado
+            if (Marcha > 0 && Marcha <= 2 && Speed > 80)
+                calor += 0.5;
+
+            // ── RESFRIAMENTO ─────────────────────────────────────────────
+            double frio = 0;
+
+            // Vento do radiador — quanto mais rápido, mais resfria
+            if (Speed > 30)
+                frio += (Speed / 200.0) * 0.4;
+
+            // Resfriamento passivo lento sempre acontece se acima do ideal
+            if (Temp > 90)
+                frio += 0.05;
+
+            // ── APLICA ───────────────────────────────────────────────────
+            Temp += calor - frio;
+            Temp = Math.Clamp(Temp, 30, 130); // Limita entre frio ambiente e superaquecimento
+        }
     }
 }
