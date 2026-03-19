@@ -9,6 +9,7 @@ This is the phase 1 of my TelemetryECU project: Core engine for real-time automo
 - [Project Overview](#projectoverview)
 - [Tech Stack](#techstack)
 - [Core Features](#corefeatures)
+- [Screens](#screens)
 - [Road Map](#roadmap)
 
 ## Project Overview
@@ -44,6 +45,14 @@ The goal of this phase is to establish a robust C#-based logic layer that will e
 
 - Sensor Failures: Includes methods to simulate "noisy" or "dead" sensors, forcing the telemetry system to handle invalid data—essential for testing the            robustness of the future TCC dashboard.
 ```
+
+## Screens
+
+```MENU SCREEN ```
+![menu](https://github.com/user-attachments/assets/7229f108-878d-437f-a425-6695586dd46f)
+```CAR SCREEN```
+![temeletry](https://github.com/user-attachments/assets/7de1c9b0-efed-41d2-ab72-f51640e3edf1)
+
 ## Roadmap
 
 - [X] Phase 1 (This project): MockCarSimulator
