@@ -22,12 +22,14 @@ The goal of this phase is to establish a robust C#-based logic layer that will e
 - Focus: Real-time data processing and automotive logic
 
 ## Core Features
-```Dynamic RPM Simulation
-      - Input-Driven Acceleration: The engine RPM responds dynamically to user interaction. By holding a key (or key press), the simulator triggers an                     acceleration curve, increasing RPM based on a "rev-up" constant.
+```
+###Dynamic RPM Simulation
 
-      - Natural Deceleration: Releasing the click initiates a deceleration curve (engine braking simulation), bringing the RPM back to a stable idle state.
+      * Input-Driven Acceleration: The engine RPM responds dynamically to user interaction. By holding a key (or key press), the simulator triggers an                     acceleration curve, increasing RPM based on a "rev-up" constant.
 
-      - Redline Handling: Includes logic for RPM cut-off (Rev Limiter) to prevent "engine damage" within the simulation.
+      * Natural Deceleration: Releasing the click initiates a deceleration curve (engine braking simulation), bringing the RPM back to a stable idle state.
+
+      * Redline Handling: Includes logic for RPM cut-off (Rev Limiter) to prevent "engine damage" within the simulation.
 ```
 ```Telemetry Broadcasting (Data Layer)
       - Serialized Output: The simulator generates structured data packets (JSON/String format) containing RPM, Engine Temperature, and Fuel Pressure.
