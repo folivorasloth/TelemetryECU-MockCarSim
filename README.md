@@ -23,25 +23,24 @@ The goal of this phase is to establish a robust C#-based logic layer that will e
 
 ## Core Features
 ```
-###Dynamic RPM Simulation
+### Dynamic RPM Simulation ###
+      `-` Input-Driven Acceleration: The engine RPM responds dynamically to user interaction. By holding a key (or key press), the simulator triggers an                     acceleration curve, increasing RPM based on a "rev-up" constant.
 
-      * Input-Driven Acceleration: The engine RPM responds dynamically to user interaction. By holding a key (or key press), the simulator triggers an                     acceleration curve, increasing RPM based on a "rev-up" constant.
+      `-` Natural Deceleration: Releasing the click initiates a deceleration curve (engine braking simulation), bringing the RPM back to a stable idle state.
 
-      * Natural Deceleration: Releasing the click initiates a deceleration curve (engine braking simulation), bringing the RPM back to a stable idle state.
+      `-` Redline Handling: Includes logic for RPM cut-off (Rev Limiter) to prevent "engine damage" within the simulation.
 
-      * Redline Handling: Includes logic for RPM cut-off (Rev Limiter) to prevent "engine damage" within the simulation.
-```
-```Telemetry Broadcasting (Data Layer)
-      - Serialized Output: The simulator generates structured data packets (JSON/String format) containing RPM, Engine Temperature, and Fuel Pressure.
+### Telemetry Broadcasting (Data Layer) ###
+      `-` Serialized Output: The simulator generates structured data packets (JSON/String format) containing RPM, Engine Temperature, and Fuel Pressure.
 
-      - Frontend Ready: These packets are broadcasted via Serial Port or WebSockets, allowing any frontend (React, Unity, or an ESP32-powered display) to consume          and visualize the data in real-time.
+      `-` Frontend Ready: These packets are broadcasted via Serial Port or WebSockets, allowing any frontend (React, Unity, or an ESP32-powered display) to consumeand visualize the data in real-time.
 
-      - High Frequency: Optimized for a high refresh rate, ensuring smooth pointer movement on digital gauges.
-```
-```ECU Error Handling & Diagnostics
-      - Check Engine Logic: The system monitors engine health. If the RPM stays at the redline for too long or if temperature thresholds are exceeded, the                 simulator triggers a "Check Engine" flag.
+      `-´ High Frequency: Optimized for a high refresh rate, ensuring smooth pointer movement on digital gauges.
 
-      - Sensor Failures: Includes methods to simulate "noisy" or "dead" sensors, forcing the telemetry system to handle invalid data—essential for testing the             robustness of the future TCC dashboard.
+### ECU Error Handling & Diagnostics ###
+      `-` Check Engine Logic: The system monitors engine health. If the RPM stays at the redline for too long or if temperature thresholds are exceeded, the                 simulator triggers a "Check Engine" flag.
+
+      `-` Sensor Failures: Includes methods to simulate "noisy" or "dead" sensors, forcing the telemetry system to handle invalid data—essential for testing the             robustness of the future TCC dashboard.
 ```
 ## Roadmap
 
