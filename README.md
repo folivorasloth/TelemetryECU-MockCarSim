@@ -1,6 +1,8 @@
 # MockCarSimulator
 
-This is the phase 1 of my TelemetryECU project: Core engine for real-time automotive data simulation and telemetry.
+## TelemetryECU | Building Telemetry From Scratch — No ECU, No OBD-II, No Shortcuts
+
+Most DIY telemetry projects rely on OBD-II adapters — plug-and-play solutions that only work on modern cars with factory ECUs. TelemetryECU is being built for the opposite: a 1994 Volkswagen Gol with no ECU, no OBD-II port, and nearly zero factory electronics. This MockCarSimulator is Phase 1 — a software-only engine to validate the telemetry logic before any hardware touches the real car.
 
 ![menu](https://github.com/user-attachments/assets/7229f108-878d-437f-a425-6695586dd46f)
 
