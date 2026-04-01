@@ -36,7 +36,7 @@ namespace MockCarSimulator
 
             carState = 2; // STARTING
             StatusMessage = "Ligando carro...";
-            await Task.Delay(3000);
+            await Task.Delay(2000);
 
             Rpm = 900;
             Temp = 70;
@@ -67,6 +67,7 @@ namespace MockCarSimulator
         public void DescerMarcha()
         {
             if (carState != 1) return;
+            if (Marcha == 0) return; 
 
                 Marcha--;
                 if (Marcha > 1)
@@ -78,16 +79,16 @@ namespace MockCarSimulator
         // ── ACELERAR ─────────────────────────────────────────────────────────────
         public void AcelerarCarro()
         {
-            if (carState != 1 || Marcha == 0) return;
+            if (carState != 1) return;
 
             // Sobe RPM
-            Rpm = Math.Min(maxRpm, Rpm + 350);
+            Rpm = Math.Min(maxRpm, Rpm + 150);
 
             // Velocidade limitada pelo teto da marcha atual
             int topSpeed = maxSpeedPerGear[Marcha];
             if (Speed < topSpeed)
             {
-                Speed += 1.5;
+                Speed += 1;
                 if (Speed > topSpeed) Speed = topSpeed;
             }
 
